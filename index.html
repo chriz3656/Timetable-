@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4a6fa5">
+    <meta name="description" content="Interactive college timetable for CSE Department">
+    <title>College Timetable</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-512x512.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cae;
+            --text-color: #333;
+            --light-text: #f5f5f5;
+            --bg-color: #f9f9f9;
+            --card-bg: #ffffff;
+            --break-color: #ffeb99;
+            --lunch-color: #ffcc80;
+            --class-color: #c8e6c9;
+            --lab-color: #bbdefb;
+            --workshop-color: #d1c4e9;
+            --sports-color: #c8e6c9;
+            --current-class: #81c784;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #5e81ac;
+            --secondary-color: #81a1c1;
+            --text-color: #eceff4;
+            --light-text: #e5e9f0;
+            --bg-color: #2e3440;
+            --card-bg: #3b4252;
+            --break-color: #5e81ac;
+            --lunch-color: #d08770;
+            --class-color: #a3be8c;
+            --lab-color: #5e81ac;
+            --workshop-color: #b48ead;
+            --sports-color: #8fbcbb;
+            --current-class: #8fbcbb;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: var(--transition);
+            padding: 20px;
+            position: relative;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .college-info {
+            max-width: 600px;
+        }
+
+        .college-name {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .dept-info {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+
+        .batch-info {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            position: relative;
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        #search {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid #ddd;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        #search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
+        }
+
+        .day-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .day-tab {
+            padding: 10px 20px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .day-tab:hover {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+        }
+
+        .day-tab.active {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+        }
+
+        .timetable-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .timetable-header {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            padding: 10px;
+            text-align: center;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+        }
+
+        .time-slot {
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            cursor: pointer;
+            background-color: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .time-slot:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .time-slot.break {
+            background-color: var(--break-color);
+        }
+
+        .time-slot.lunch {
+            background-color: var(--lunch-color);
+        }
+
+        .time-slot.lecture {
+            background-color: var(--class-color);
+        }
+
+        .time-slot.lab {
+            background-color: var(--lab-color);
+        }
+
+        .time-slot.workshop {
+            background-color: var(--workshop-color);
+        }
+
+        .time-slot.sports {
+            background-color: var(--sports-color);
+        }
+
+        .time-slot.current {
+            background-color: var(--current-class);
+            position: relative;
+        }
+
+        .time-slot.current::after {
+            content: "NOW";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .time-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            font-size: 0.9em;
+        }
+
+        .course-code {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .course-name {
+            font-weight: 500;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .faculty-info {
+            font-size: 0.85em;
+            opacity: 0.8;
+            margin-top: auto;
+        }
+
+        .credit-hours {
+            font-size: 0.8em;
+            margin-top: 3px;
+            opacity: 0.7;
+        }
+
+        .mobile-day-view {
+            display: none;
+        }
+
+        .day-content {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .theme-toggle {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .modal-title {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .modal-info {
+            margin-bottom: 10px;
+            display: flex;
+        }
+
+        .modal-label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            text-align: center;
+            background-color: var(--card-bg);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .credit {
+            font-size: 0.9em;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .social-link {
+            color: var(--text-color);
+            opacity: 0.7;
+            transition: var(--transition);
+            font-size: 1.2em;
+        }
+
+        .social-link:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 1024px) {
+            .timetable-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .timetable-grid {
+                display: none;
+            }
+
+            .mobile-day-view {
+                display: block;
+            }
+
+            .day-tabs {
+                justify-content: center;
+            }
+
+            header {
+                flex-direction: column;
+            }
+
+            .college-info {
+                text-align: center;
+            }
+
+            .footer {
+                position: relative;
+                margin-top: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .day-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-buttons {
+                justify-content: center;
+            }
+
+            .credit {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+
+        /* PWA Install Prompt */
+        #installContainer {
+            position: fixed;
+            bottom: 1em;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            padding: 1em;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            z-index: 999;
+            display: none;
+        }
+
+        #installButton {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="college-info">
+                <div class="college-name">COLLEGE OF ENGINEERING ARANMULA</div>
+                <div class="dept-info">Department of Computer Science and Engineering</div>
+                <div class="batch-info">Batch: 2025-2026 (Diploma - CFIS) | Semester: S1 | Tutor: Sherin Annie Thomas</div>
+            </div>
+            <div class="controls">
+                <div class="search-container">
+                    <input type="text" id="search" placeholder="Search courses, faculty...">
+                </div>
+                <button id="today-btn">Today</button>
+                <button class="theme-toggle" id="theme-toggle">
+                    <span id="theme-icon">🌙</span> Theme
+                </button>
+            </div>
+        </header>
+
+        <div class="nav-buttons">
+            <button id="prev-day">Previous Day</button>
+            <button id="next-day">Next Day</button>
+        </div>
+
+        <div class="day-tabs" id="day-tabs">
+            <!-- Tabs will be generated by JavaScript -->
+        </div>
+
+        <div class="timetable-grid" id="timetable-grid">
+            <!-- Grid header -->
+            <div class="timetable-header">Time</div>
+            <div class="timetable-header">Monday</div>
+            <div class="timetable-header">Tuesday</div>
+            <div class="timetable-header">Wednesday</div>
+            <div class="timetable-header">Thursday</div>
+            <div class="timetable-header">Friday</div>
+            
+            <!-- Time slots will be populated by JavaScript -->
+        </div>
+
+        <div class="mobile-day-view" id="mobile-day-view">
+            <!-- Mobile day view will be populated by JavaScript -->
+        </div>
+
+        <div class="modal" id="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3 class="modal-title" id="modal-title">Course Details</h3>
+                <div class="modal-info">
+                    <span class="modal-label">Time:</span>
+                    <span id="modal-time"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Day:</span>
+                    <span id="modal-day"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Course Code:</span>
+                    <span id="modal-code"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Course Name:</span>
+                    <span id="modal-subject"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Faculty:</span>
+                    <span id="modal-teacher"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Type:</span>
+                    <span id="modal-type"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Credits:</span>
+                    <span id="modal-credits"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Hours/Week:</span>
+                    <span id="modal-hours"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Department:</span>
+                    <span id="modal-dept"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="installContainer" class="hidden">
+        <p>Install this app for better experience</p>
+        <button id="installButton">Install</button>
+    </div>
+
+    <div class="footer">
+        <div class="credit">
+            <span>Created by</span>
+            <span style="font-weight:bold;color:var(--primary-color)">chriz</span>
+        </div>
+        <div class="social-links">
+            <a href="https://chriz3656.github.io" target="_blank" class="social-link" title="Website">
+                <i class="fas fa-globe"></i>
+            </a>
+            <a href="https://instagram.com/chriz__3656" target="_blank" class="social-link" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://discord.com/users/chriz__3656" target="_blank" class="social-link" title="Discord">
+                <i class="fab fa-discord"></i>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const timetableGrid = document.getElementById('timetable-grid');
+            const mobileDayView = document.getElementById('mobile-day-view');
+            const dayTabs = document.getElementById('day-tabs');
+            const searchInput = document.getElementById('search');
+            const todayBtn = document.getElementById('today-btn');
+            const prevDayBtn = document.getElementById('prev-day');
+            const nextDayBtn = document.getElementById('next-day');
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            const modal = document.getElementById('modal');
+            const closeModal = document.querySelector('.close-modal');
+            const installContainer = document.getElementById('installContainer');
+            const installButton = document.getElementById('installButton');
+            
+            // Timetable data
+            let timetableData = [];
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            let currentDayIndex = 0;
+            let deferredPrompt;
+            
+            // Course details from the PDF
+            const courseDetails = {
+                '1001': {
+                    code: '1001',
+                    name: 'COMMUNICATION SKILLS IN ENGLISH',
+                    faculty: 'SURYA S',
+                    type: 'Lecture',
+                    credits: '4',
+                    hours: '4',
+                    dept: 'AS',
+                    facultyCode: 'SS'
+                },
+                '1002': {
+                    code: '1002',
+                    name: 'MATHEMATICS I',
+                    faculty: 'RESMI R NAIR',
+                    type: 'Lecture',
+                    credits: '5',
+                    hours: '5',
+                    dept: 'AS',
+                    facultyCode: 'RRN'
+                },
+                '1003': {
+                    code: '1003',
+                    name: 'APPLIED PHYSICS I',
+                    faculty: 'BINCY ANNIE PHILIP',
+                    type: 'Lecture',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'AS',
+                    facultyCode: 'BAP'
+                },
+                '1004': {
+                    code: '1004',
+                    name: 'APPLIED CHEMISTRY',
+                    faculty: 'SREEUSHA N',
+                    type: 'Lecture',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'AS',
+                    facultyCode: 'SN'
+                },
+                '1005': {
+                    code: '1005',
+                    name: 'ENGINEERING GRAPHICS',
+                    faculty: 'SAMSON PETER',
+                    type: 'Practical',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'AS',
+                    facultyCode: 'SP'
+                },
+                '2006': {
+                    code: '2006',
+                    name: 'APPLIED PHYSICS LAB',
+                    faculty: 'BINCY ANNIE PHILIP',
+                    type: 'Lab',
+                    credits: '2',
+                    hours: '2',
+                    dept: 'AS',
+                    facultyCode: 'BAP'
+                },
+                '1007': {
+                    code: '1007',
+                    name: 'APPLIED CHEMISTRY LAB',
+                    faculty: 'SREEUSHA N',
+                    type: 'Lab',
+                    credits: '2',
+                    hours: '2',
+                    dept: 'AS',
+                    facultyCode: 'SN'
+                },
+                '1008': {
+                    code: '1008',
+                    name: 'INTRODUCTION TO IT SYSTEM LAB',
+                    faculty: 'SHERIN ANNIE THOMAS / DEEPIKA S NAIR',
+                    type: 'Lab/Lecture',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'CSE',
+                    facultyCode: 'SAT/DSN'
+                },
+                '2009': {
+                    code: '2009',
+                    name: 'ENGINEERING WORKSHOP PRACTICE',
+                    faculty: 'BINJU K BABU',
+                    type: 'Workshop',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'CE,AS',
+                    facultyCode: 'BKB'
+                },
+                '1009': {
+                    code: '1009',
+                    name: 'SPORTS AND YOGA',
+                    faculty: 'RAHUL U',
+                    type: 'Practical',
+                    credits: '2',
+                    hours: '3',
+                    dept: 'AS',
+                    facultyCode: 'RU'
+                }
+            };
+            
+            // Timetable structure from the PDF
+            const timetableStructure = [
+                // Morning sessions
+                {
+                    time: "9:00–10:00",
+                    monday: "1001 (SS)",
+                    tuesday: "1008 (SAT)",
+                    wednesday: "2009 (BKB)",
+                    thursday: "1004 (SN)",
+                    friday: "1005 (SP)"
+                },
+                {
+                    time: "10:00–10:10",
+                    monday: "**Break**",
+                    tuesday: "**Break**",
+                    wednesday: "**Break**",
+                    thursday: "**Break**",
+                    friday: "**Break**"
+                },
+                {
+                    time: "10:10–11:10",
+                    monday: "1002 (RRN)",
+                    tuesday: "1008/2006 (SAT,DSN/BAP)",
+                    wednesday: "2009/2006 (SAT,DSN/BAP)",
+                    thursday: "1008/2006 (SAT,DSN/BAP)",
+                    friday: "1005/2006 (SP)"
+                },
+                {
+                    time: "11:10–12:10",
+                    monday: "1003 (BAP)",
+                    tuesday: "1001 (SS)",
+                    wednesday: "",
+                    thursday: "",
+                    friday: ""
+                },
+                {
+                    time: "12:10–12:50",
+                    monday: "**Lunch Break**",
+                    tuesday: "**Lunch Break**",
+                    wednesday: "**Lunch Break**",
+                    thursday: "**Lunch Break**",
+                    friday: "**Lunch Break**"
+                },
+                // Afternoon sessions
+                {
+                    time: "12:50–1:50",
+                    monday: "1002 (RRN)",
+                    tuesday: "1004 (SN)",
+                    wednesday: "1002 (RRN)",
+                    thursday: "1003 (BAP)",
+                    friday: "1001 (SS)"
+                },
+                {
+                    time: "1:50–2:50",
+                    monday: "1001 (SS)",
+                    tuesday: "1001 (SS)",
+                    wednesday: "",
+                    thursday: "",
+                    friday: "1002 (RRN)"
+                },
+                {
+                    time: "2:50–3:00",
+                    monday: "**Break**",
+                    tuesday: "",
+                    wednesday: "1009 (RU)",
+                    thursday: "1007 (SN)",
+                    friday: ""
+                },
+                {
+                    time: "3:00–4:00",
+                    monday: "1003 (BAP)",
+                    tuesday: "",
+                    wednesday: "",
+                    thursday: "",
+                    friday: "1004 (SN)"
+                }
+            ];
+            
+            // Initialize the timetable
+            function initializeTimetable() {
+                timetableData = timetableStructure;
+                createDayTabs();
+                renderTimetableGrid();
+                renderMobileDayView(currentDayIndex);
+                highlightCurrentClass();
+                
+                // Load last viewed day from localStorage
+                const savedDay = localStorage.getItem('lastViewedDay');
+                if (savedDay !== null) {
+                    const dayIndex = days.indexOf(savedDay);
+                    if (dayIndex !== -1) {
+                        currentDayIndex = dayIndex;
+                        updateActiveTab();
+                        renderMobileDayView(currentDayIndex);
+                    }
+                }
+                
+                // Set initial theme
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                setTheme(savedTheme);
+            }
+            
+            // Create day tabs
+            function createDayTabs() {
+                dayTabs.innerHTML = '';
+                
+                days.forEach((day, index) => {
+                    const tab = document.createElement('div');
+                    tab.className = 'day-tab';
+                    if (index === currentDayIndex) tab.classList.add('active');
+                    tab.textContent = day;
+                    tab.dataset.dayIndex = index;
+                    
+                    tab.addEventListener('click', () => {
+                        currentDayIndex = index;
+                        updateActiveTab();
+                        renderMobileDayView(currentDayIndex);
+                        localStorage.setItem('lastViewedDay', day);
+                    });
+                    
+                    dayTabs.appendChild(tab);
+                });
+            }
+            
+            // Update active tab
+            function updateActiveTab() {
+                const tabs = document.querySelectorAll('.day-tab');
+                tabs.forEach((tab, index) => {
+                    if (index === currentDayIndex) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Render timetable grid (desktop view)
+            function renderTimetableGrid(filter = '') {
+                // Clear existing content (except headers)
+                while (timetableGrid.children.length > 6) {
+                    timetableGrid.removeChild(timetableGrid.lastChild);
+                }
+                
+                timetableData.forEach(slot => {
+                    // Add time column
+                    const timeCell = document.createElement('div');
+                    timeCell.className = 'time-label';
+                    timeCell.textContent = slot.time;
+                    timetableGrid.appendChild(timeCell);
+                    
+                    // Add day columns
+                    days.forEach(day => {
+                        const dayLower = day.toLowerCase();
+                        const content = slot[dayLower] || '';
+                        
+                        const cell = document.createElement('div');
+                        
+                        if (content === '') {
+                            cell.className = 'time-slot empty';
+                            cell.innerHTML = '&nbsp;';
+                        } else {
+                            const isBreak = content.includes('**Break**');
+                            const isLunch = content.includes('**Lunch Break**');
+                            const isClass = !isBreak && !isLunch && content.trim() !== '';
+                            
+                            cell.className = 'time-slot';
+                            
+                            if (isBreak) {
+                                cell.classList.add('break');
+                                cell.textContent = content.replace(/\*\*/g, '');
+                            } else if (isLunch) {
+                                cell.classList.add('lunch');
+                                cell.textContent = content.replace(/\*\*/g, '');
+                            } else if (isClass) {
+                                // Parse course code and faculty code
+                                const courseMatch = content.match(/(\d+)\s*\(([^)]+)\)/);
+                                if (courseMatch) {
+                                    const courseCode = courseMatch[1];
+                                    const facultyCode = courseMatch[2];
+                                    const course = courseDetails[courseCode] || {};
+                                    
+                                    // Determine class type for styling
+                                    if (course.type === 'Lab') {
+                                        cell.classList.add('lab');
+                                    } else if (course.type === 'Workshop') {
+                                        cell.classList.add('workshop');
+                                    } else if (courseCode === '1009') {
+                                        cell.classList.add('sports');
+                                    } else {
+                                        cell.classList.add('lecture');
+                                    }
+                                    
+                                    cell.innerHTML = `
+                                        <div class="time-label">${slot.time}</div>
+                                        <div class="course-code">${courseCode} (${facultyCode})</div>
+                                        <div class="course-name">${course.name || 'N/A'}</div>
+                                        <div class="faculty-info">${course.faculty || 'N/A'}</div>
+                                        <div class="credit-hours">${course.credits || 'N/A'} credits • ${course.hours || 'N/A'} hrs/week</div>
+                                    `;
+                                    
+                                    // Add click event for modal
+                                    cell.addEventListener('click', () => {
+                                        showModal(
+                                            courseCode,
+                                            course.name || 'N/A',
+                                            course.faculty || 'N/A',
+                                            day,
+                                            slot.time,
+                                            course.type || 'N/A',
+                                            course.credits || 'N/A',
+                                            course.hours || 'N/A',
+                                            course.dept || 'N/A',
+                                            facultyCode
+                                        );
+                                    });
+                                } else {
+                                    cell.textContent = content;
+                                }
+                            }
+                        }
+                        
+                        // Apply filter
+                        if (filter) {
+                            const searchText = cell.textContent.toLowerCase();
+                            if (!searchText.includes(filter.toLowerCase())) {
+                                cell.style.display = 'none';
+                            } else {
+                                cell.style.display = 'flex';
+                            }
+                        } else {
+                            cell.style.display = 'flex';
+                        }
+                        
+                        timetableGrid.appendChild(cell);
+                    });
+                });
+            }
+            
+            // Render mobile day view
+            function renderMobileDayView(dayIndex, filter = '') {
+                const day = days[dayIndex].toLowerCase();
+                mobileDayView.innerHTML = '';
+                
+                const dayTitle = document.createElement('h2');
+                dayTitle.textContent = days[dayIndex];
+                mobileDayView.appendChild(dayTitle);
+                
+                const dayContent = document.createElement('div');
+                dayContent.className = 'day-content';
+                mobileDayView.appendChild(dayContent);
+                
+                let hasResults = false;
+                
+                timetableData.forEach(slot => {
+                    const content = slot[day] || '';
+                    if (content.trim() === '') return;
+                    
+                    const card = document.createElement('div');
+                    
+                    const isBreak = content.includes('**Break**');
+                    const isLunch = content.includes('**Lunch Break**');
+                    const isClass = !isBreak && !isLunch;
+                    
+                    card.className = 'time-slot';
+                    
+                    if (isBreak) {
+                        card.classList.add('break');
+                        card.textContent = `${slot.time}: ${content.replace(/\*\*/g, '')}`;
+                    } else if (isLunch) {
+                        card.classList.add('lunch');
+                        card.textContent = `${slot.time}: ${content.replace(/\*\*/g, '')}`;
+                    } else if (isClass) {
+                        // Parse course code and faculty code
+                        const courseMatch = content.match(/(\d+)\s*\(([^)]+)\)/);
+                        if (courseMatch) {
+                            const courseCode = courseMatch[1];
+                            const facultyCode = courseMatch[2];
+                            const course = courseDetails[courseCode] || {};
+                            
+                            // Determine class type for styling
+                            if (course.type === 'Lab') {
+                                card.classList.add('lab');
+                            } else if (course.type === 'Workshop') {
+                                card.classList.add('workshop');
+                            } else if (courseCode === '1009') {
+                                card.classList.add('sports');
+                            } else {
+                                card.classList.add('lecture');
+                            }
+                            
+                            card.innerHTML = `
+                                <div class="time-label">${slot.time}</div>
+                                <div class="course-code">${courseCode} (${facultyCode})</div>
+                                <div class="course-name">${course.name || 'N/A'}</div>
+                                <div class="faculty-info">${course.faculty || 'N/A'}</div>
+                                <div class="credit-hours">${course.credits || 'N/A'} credits • ${course.hours || 'N/A'} hrs/week</div>
+                            `;
+                            
+                            // Add click event for modal
+                            card.addEventListener('click', () => {
+                                showModal(
+                                    courseCode,
+                                    course.name || 'N/A',
+                                    course.faculty || 'N/A',
+                                    days[dayIndex],
+                                    slot.time,
+                                    course.type || 'N/A',
+                                    course.credits || 'N/A',
+                                    course.hours || 'N/A',
+                                    course.dept || 'N/A',
+                                    facultyCode
+                                );
+                            });
+                        } else {
+                            card.textContent = content;
+                        }
+                    }
+                    
+                    // Apply filter
+                    if (filter) {
+                        const searchText = card.textContent.toLowerCase();
+                        if (!searchText.includes(filter.toLowerCase())) {
+                            return;
+                        }
+                    }
+                    
+                    dayContent.appendChild(card);
+                    hasResults = true;
+                });
+                
+                if (!hasResults) {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'no-results';
+                    noResults.textContent = 'No classes found for this day';
+                    dayContent.appendChild(noResults);
+                }
+            }
+            
+            // Highlight current ongoing class
+            function highlightCurrentClass() {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                
+                // Only highlight if it's a weekday (Monday to Friday)
+                if (currentDay >= 1 && currentDay <= 5) {
+                    const dayIndex = currentDay - 1;
+                    const day = days[dayIndex].toLowerCase();
+                    
+                    timetableData.forEach(slot => {
+                        const timeMatch = slot.time.match(/(\d+):(\d+)–(\d+):(\d+)/);
+                        if (!timeMatch) return;
+                        
+                        const startHour = parseInt(timeMatch[1]);
+                        const startMinute = parseInt(timeMatch[2]);
+                        const endHour = parseInt(timeMatch[3]);
+                        const endMinute = parseInt(timeMatch[4]);
+                        
+                        const slotStart = new Date();
+                        slotStart.setHours(startHour, startMinute, 0, 0);
+                        
+                        const slotEnd = new Date();
+                        slotEnd.setHours(endHour, endMinute, 0, 0);
+                        
+                        if (now >= slotStart && now <= slotEnd) {
+                            // Highlight in grid view
+                            const timeIndex = timetableData.indexOf(slot);
+                            if (timeIndex !== -1) {
+                                const cellIndex = 1 + dayIndex + (timeIndex * 6);
+                                const cell = timetableGrid.children[cellIndex];
+                                if (cell) cell.classList.add('current');
+                            }
+                            
+                            // Highlight in mobile view if viewing current day
+                            if (currentDayIndex === dayIndex) {
+                                const mobileCards = document.querySelectorAll('.mobile-day-view .time-slot');
+                                mobileCards.forEach(card => {
+                                    if (card.textContent.includes(slot.time)) {
+                                        card.classList.add('current');
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Show modal with class details
+            function showModal(code, subject, teacher, day, time, type, credits, hours, dept, facultyCode) {
+                document.getElementById('modal-title').textContent = subject;
+                document.getElementById('modal-time').textContent = time;
+                document.getElementById('modal-day').textContent = day;
+                document.getElementById('modal-code').textContent = code;
+                document.getElementById('modal-subject').textContent = subject;
+                document.getElementById('modal-teacher').textContent = teacher + (facultyCode ? ` (${facultyCode})` : '');
+                document.getElementById('modal-type').textContent = type;
+                document.getElementById('modal-credits').textContent = credits;
+                document.getElementById('modal-hours').textContent = hours;
+                document.getElementById('modal-dept').textContent = dept;
+                
+                modal.style.display = 'flex';
+            }
+            
+            // Close modal
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Search functionality
+            searchInput.addEventListener('input', (e) => {
+                const filter = e.target.value.trim();
+                renderTimetableGrid(filter);
+                renderMobileDayView(currentDayIndex, filter);
+            });
+            
+            // Today button
+            todayBtn.addEventListener('click', () => {
+                const today = new Date().getDay() - 1; // 0 = Monday
+                if (today >= 0 && today <= 4) {
+                    currentDayIndex = today;
+                    updateActiveTab();
+                    renderMobileDayView(currentDayIndex);
+                    localStorage.setItem('lastViewedDay', days[currentDayIndex]);
+                }
+            });
+            
+            // Previous day button
+            prevDayBtn.addEventListener('click', () => {
+                currentDayIndex = (currentDayIndex - 1 + days.length) % days.length;
+                updateActiveTab();
+                renderMobileDayView(currentDayIndex);
+                localStorage.setItem('lastViewedDay', days[currentDayIndex]);
+            });
+            
+            // Next day button
+            nextDayBtn.addEventListener('click', () => {
+                currentDayIndex = (currentDayIndex + 1) % days.length;
+                updateActiveTab();
+                renderMobileDayView(currentDayIndex);
+                localStorage.setItem('lastViewedDay', days[currentDayIndex]);
+            });
+            
+            // Theme toggle
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                setTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+            
+            // Set theme
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+            }
+            
+            // PWA Installation
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installContainer.style.display = 'block';
+            });
+            
+            installButton.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installContainer.style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                }
+            });
+            
+            window.addEventListener('appinstalled', () => {
+                installContainer.style.display = 'none';
+            });
+            
+            // Initialize the timetable
+            initializeTimetable();
+        });
+    </script>
+</body>
+</html>
