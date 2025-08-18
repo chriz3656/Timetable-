@@ -2,8 +2,8 @@ const CACHE_NAME = 'timetable-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/icons/icon-192x192.jpg',
-  '/icons/icon-512x512.jpg'
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
