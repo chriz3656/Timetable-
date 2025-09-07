@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4a6fa5">
+    <meta name="description" content="Interactive college timetable for CSE Department">
+    <title>College Timetable</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-512x512.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cae;
+            --text-color: #333;
+            --light-text: #f5f5f5;
+            --bg-color: #f9f9f9;
+            --card-bg: #ffffff;
+            --break-color: #ffeb99;
+            --lunch-color: #ffcc80;
+            --class-color: #c8e6c9;
+            --lab-color: #bbdefb;
+            --workshop-color: #d1c4e9;
+            --sports-color: #c8e6c9;
+            --current-class: #81c784;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+            --neon-glow: 0 0 10px rgba(74, 111, 165, 0.5);
+            --sidebar-width: 60px;
+            --sidebar-expanded-width: 250px;
+        }
+        [data-theme="dark"] {
+            --primary-color: #5e81ac;
+            --secondary-color: #81a1c1;
+            --text-color: #eceff4;
+            --light-text: #e5e9f0;
+            --bg-color: #2e3440;
+            --card-bg: #3b4252;
+            --break-color: #5e81ac;
+            --lunch-color: #d08770;
+            --class-color: #a3be8c;
+            --lab-color: #5e81ac;
+            --workshop-color: #b48ead;
+            --sports-color: #8fbcbb;
+            --current-class: #8fbcbb;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --neon-glow: 0 0 10px rgba(94, 129, 172, 0.7);
+        }
+        [data-theme="ocean"] {
+            --primary-color: #0077be;
+            --secondary-color: #00a8cc;
+            --text-color: #2d3436;
+            --light-text: #ffffff;
+            --bg-color: #e0f7fa;
+            --card-bg: #ffffff;
+            --break-color: #80deea;
+            --lunch-color: #4dd0e1;
+            --class-color: #81d4fa;
+            --lab-color: #4fc3f7;
+            --workshop-color: #29b6f6;
+            --sports-color: #039be5;
+            --current-class: #0288d1;
+            --shadow: 0 4px 15px rgba(0, 119, 190, 0.2);
+            --neon-glow: 0 0 15px rgba(2, 136, 209, 0.4);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, var(--card-bg) 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: var(--transition);
+            padding: 20px;
+            position: relative;
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+            display: flex; /* Added for sidebar layout */
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-out;
+            flex-grow: 1; /* Takes remaining space */
+            padding-left: calc(var(--sidebar-width) + 20px); /* Offset for sidebar */
+            transition: padding-left 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+            animation: slideInDown 0.8s ease-out;
+        }
+        @keyframes slideInDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .college-info {
+            max-width: 600px;
+            perspective: 1000px;
+            flex-grow: 1;
+        }
+        .college-name {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+            text-shadow: var(--neon-glow);
+            transform-style: preserve-3d;
+            transition: transform 0.3s;
+        }
+        .college-name:hover {
+            transform: translateZ(20px);
+        }
+        .dept-info {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+        .batch-info {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.05);
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(5px);
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-container {
+            position: relative;
+            flex-grow: 1;
+            min-width: 200px;
+            transform: translateZ(0);
+        }
+        #search {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 30px;
+            border: 2px solid transparent;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+        #search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.3);
+        }
+        .day-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scrollbar-width: thin;
+        }
+        .day-tab {
+            padding: 12px 25px;
+            background-color: var(--card-bg);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            font-weight: 500;
+            box-shadow: var(--shadow);
+            transform: translateZ(0);
+            position: relative;
+            overflow: hidden;
+        }
+        .day-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        .day-tab:hover::before {
+            left: 100%;
+        }
+        .day-tab:hover {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            transform: translateY(-3px);
+        }
+        .day-tab.active {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            box-shadow: var(--neon-glow);
+            transform: translateY(-3px);
+        }
+        .timetable-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            perspective: 1000px;
+        }
+        .timetable-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--light-text);
+            padding: 15px;
+            text-align: center;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+            box-shadow: var(--shadow);
+            transform-style: preserve-3d;
+            transition: transform 0.3s;
+        }
+        .timetable-header:hover {
+            transform: translateZ(10px);
+        }
+        .time-slot {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            cursor: pointer;
+            background-color: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            transform-style: preserve-3d;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .time-slot::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+        .time-slot:hover::after {
+            transform: translateX(100%);
+        }
+        .time-slot:hover {
+            transform: translateY(-5px) rotateY(5deg);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .time-slot.break {
+            background: linear-gradient(135deg, var(--break-color), #ffd54f);
+        }
+        .time-slot.lunch {
+            background: linear-gradient(135deg, var(--lunch-color), #ffb74d);
+        }
+        .time-slot.lecture {
+            background: linear-gradient(135deg, var(--class-color), #a5d6a7);
+        }
+        .time-slot.lab {
+            background: linear-gradient(135deg, var(--lab-color), #90caf9);
+        }
+        .time-slot.workshop {
+            background: linear-gradient(135deg, var(--workshop-color), #ce93d8);
+        }
+        .time-slot.sports {
+            background: linear-gradient(135deg, var(--sports-color), #80cbc4);
+        }
+        .time-slot.current {
+            background: linear-gradient(135deg, var(--current-class), #4db6ac);
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+        .time-slot.current::after {
+            content: "NOW";
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .time-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            font-size: 0.9em;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        .course-code {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .course-name {
+            font-weight: 500;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+        .faculty-info {
+            font-size: 0.85em;
+            opacity: 0.8;
+            margin-top: auto;
+        }
+        .credit-hours {
+            font-size: 0.8em;
+            margin-top: 3px;
+            opacity: 0.7;
+        }
+        .mobile-day-view {
+            display: none;
+        }
+        .day-content {
+            display: grid;
+            gap: 15px;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--light-text);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+        button:hover::after {
+            transform: translateX(100%);
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, var(--card-bg), rgba(255,255,255,0.9));
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transform: scale(0.9);
+            animation: modalAppear 0.4s forwards;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        @keyframes modalAppear {
+            to { transform: scale(1); }
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: var(--transition);
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .close-modal:hover {
+            background: rgba(0,0,0,0.1);
+            transform: rotate(90deg);
+        }
+        .modal-title {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.5rem;
+            text-shadow: var(--neon-glow);
+        }
+        .modal-info {
+            margin-bottom: 15px;
+            display: flex;
+            padding: 12px;
+            background: rgba(0,0,0,0.03);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+        .modal-info:hover {
+            background: rgba(0,0,0,0.05);
+            transform: translateX(5px);
+        }
+        .modal-label {
+            font-weight: bold;
+            min-width: 130px;
+            color: var(--primary-color);
+        }
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 30px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--card-bg), rgba(255,255,255,0.9));
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05);
+            margin-left: calc(var(--sidebar-width) + 20px); /* Offset for sidebar */
+            width: calc(100% - var(--sidebar-width) - 40px); /* Adjust width */
+            transition: margin-left 0.3s ease, width 0.3s ease;
+        }
+        .credit {
+            font-size: 0.9em;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .social-links {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+            justify-content: center;
+        }
+        .social-link {
+            color: var(--text-color);
+            opacity: 0.7;
+            transition: var(--transition);
+            font-size: 1.4em;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.05);
+        }
+        .social-link:hover {
+            opacity: 1;
+            transform: translateY(-5px) scale(1.1);
+            background: var(--primary-color);
+            color: white;
+            box-shadow: var(--neon-glow);
+        }
+        @media (max-width: 1024px) {
+            .timetable-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .timetable-grid {
+                display: none;
+            }
+            .mobile-day-view {
+                display: block;
+            }
+            .day-tabs {
+                justify-content: center;
+            }
+            header {
+                flex-direction: column;
+            }
+            .college-info {
+                text-align: center;
+            }
+            .footer {
+                position: relative;
+                margin-top: 30px;
+                margin-left: 20px;
+                width: calc(100% - 40px);
+            }
+            .container {
+                 padding-left: 20px;
+            }
+        }
+        @media (max-width: 480px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .day-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .nav-buttons {
+                justify-content: center;
+            }
+            .credit {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+
+        /* --- Sidebar Styles --- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--light-text);
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.expanded {
+            width: var(--sidebar-expanded-width);
+        }
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--light-text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .sidebar.expanded .sidebar-toggle {
+            text-align: left;
+            padding-left: 20px;
+        }
+        .sidebar.expanded .sidebar-toggle i {
+            margin-right: 10px;
+        }
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease 0.1s, visibility 0.3s ease 0.1s;
+            flex-grow: 1;
+        }
+        .sidebar.expanded .sidebar-content {
+            opacity: 1;
+            visibility: visible;
+        }
+        .sidebar-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light-text);
+            border: none;
+            border-radius: 30px;
+            padding: 12px 20px;
+            margin: 8px 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            width: calc(100% - 30px);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .sidebar-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .sidebar-button i {
+            min-width: 20px;
+            text-align: center;
+        }
+        .theme-selector {
+            position: relative;
+            width: 100%;
+            margin-top: auto; /* Push to bottom */
+        }
+        .theme-options {
+            display: none;
+            flex-direction: column;
+            margin-top: 5px;
+            width: 100%;
+        }
+        .theme-option {
+            padding: 10px 20px 10px 52px; /* Align with icon + gap */
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(0,0,0,0.1);
+            border-radius: 0 0 30px 30px;
+        }
+        .theme-option:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .theme-option[data-theme="light"] { background: linear-gradient(to right, rgba(249,249,249,0.8), rgba(224,224,224,0.8)); color: #333; }
+        .theme-option[data-theme="dark"] { background: linear-gradient(to right, rgba(46,52,64,0.8), rgba(59,66,82,0.8)); color: white; }
+        .theme-option[data-theme="ocean"] { background: linear-gradient(to right, rgba(224,247,250,0.8), rgba(178,235,242,0.8)); color: #333; }
+
+        /* --- Persistent Install Prompt --- */
+        #install-prompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--light-text);
+            padding: 15px 20px;
+            display: none; /* Hidden by default */
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999;
+            box-shadow: var(--shadow);
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        #install-prompt p {
+            margin: 0;
+            font-weight: 500;
+        }
+        #install-prompt button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--light-text);
+            padding: 8px 15px;
+            margin-left: 15px;
+            font-size: 0.9rem;
+        }
+        #install-prompt button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        #close-install-prompt {
+            background: none;
+            border: none;
+            color: var(--light-text);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        /* --- Loading Screen Styles --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        .loader {
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-top: 8px solid var(--light-text);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #loading-text {
+            color: var(--light-text);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Persistent Install Prompt -->
+    <div id="install-prompt">
+        <p>Install this app for a better experience!</p>
+        <div>
+            <button id="install-app-btn">Install</button>
+            <button id="close-install-prompt">&times;</button>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <div id="loading-text">Loading Timetable...</div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" id="sidebar-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="sidebar-content">
+            <button class="sidebar-button" id="share-btn">
+                <i class="fas fa-share-alt"></i> <span>Share Timetable</span>
+            </button>
+            <button class="sidebar-button" id="notify-btn">
+                <i class="fas fa-bell"></i> <span>Enable Notifications</span>
+            </button>
+            <div class="theme-selector">
+                <button class="sidebar-button" id="theme-toggle-btn">
+                    <i class="fas fa-moon" id="theme-icon-sidebar"></i> <span>Theme</span>
+                </button>
+                <div class="theme-options" id="theme-options">
+                    <div class="theme-option" data-theme="light">Light</div>
+                    <div class="theme-option" data-theme="dark">Dark</div>
+                    <div class="theme-option" data-theme="ocean">Ocean</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="college-info">
+                <div class="college-name">COLLEGE OF ENGINEERING ARANMULA</div>
+                <div class="dept-info">Department of Computer Science and Engineering</div>
+                <div class="batch-info">Batch: 2025-2026 (Diploma - CFIS) | Semester: S1 | Tutor: Sherin Annie Thomas</div>
+            </div>
+            <div class="controls">
+                <div class="search-container">
+                    <input type="text" id="search" placeholder="Search courses, faculty...">
+                </div>
+                <button id="today-btn">Today</button>
+                <!-- Removed Share, Notify, Theme Toggle from here -->
+            </div>
+        </header>
+        <div class="nav-buttons">
+            <button id="prev-day">Previous Day</button>
+            <button id="next-day">Next Day</button>
+        </div>
+        <div class="day-tabs" id="day-tabs">
+            <!-- Tabs will be generated by JavaScript -->
+        </div>
+        <div class="timetable-grid" id="timetable-grid">
+            <!-- Grid header -->
+            <div class="timetable-header">Time</div>
+            <div class="timetable-header">Monday</div>
+            <div class="timetable-header">Tuesday</div>
+            <div class="timetable-header">Wednesday</div>
+            <div class="timetable-header">Thursday</div>
+            <div class="timetable-header">Friday</div>
+            <!-- Time slots will be populated by JavaScript -->
+        </div>
+        <div class="mobile-day-view" id="mobile-day-view">
+            <!-- Mobile day view will be populated by JavaScript -->
+        </div>
+        <div class="modal" id="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3 class="modal-title" id="modal-title">Course Details</h3>
+                <div class="modal-info">
+                    <span class="modal-label">Time:</span>
+                    <span id="modal-time"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Day:</span>
+                    <span id="modal-day"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Course Code:</span>
+                    <span id="modal-code"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Course Name:</span>
+                    <span id="modal-subject"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Faculty:</span>
+                    <span id="modal-teacher"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Type:</span>
+                    <span id="modal-type"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Credits:</span>
+                    <span id="modal-credits"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Hours/Week:</span>
+                    <span id="modal-hours"></span>
+                </div>
+                <div class="modal-info">
+                    <span class="modal-label">Department:</span>
+                    <span id="modal-dept"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <div class="credit">
+            <span>Created by</span>
+            <span style="font-weight:bold;color:var(--primary-color)">chriz</span>
+        </div>
+        <div class="social-links">
+            <a href="https://chriz3656.github.io" target="_blank" class="social-link" title="Website">
+                <i class="fas fa-globe"></i>
+            </a>
+            <a href="https://instagram.com/chriz__3656" target="_blank" class="social-link" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://discord.com/users/chriz__3656" target="_blank" class="social-link" title="Discord">
+                <i class="fab fa-discord"></i>
+            </a>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const timetableGrid = document.getElementById('timetable-grid');
+            const mobileDayView = document.getElementById('mobile-day-view');
+            const dayTabs = document.getElementById('day-tabs');
+            const searchInput = document.getElementById('search');
+            const todayBtn = document.getElementById('today-btn');
+            const prevDayBtn = document.getElementById('prev-day');
+            const nextDayBtn = document.getElementById('next-day');
+            const modal = document.getElementById('modal');
+            const closeModal = document.querySelector('.close-modal');
+            const themeOptions = document.querySelectorAll('.theme-option');
+
+            // Sidebar elements
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const shareBtn = document.getElementById('share-btn');
+            const notifyBtn = document.getElementById('notify-btn');
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const themeIconSidebar = document.getElementById('theme-icon-sidebar');
+            const themeOptionsContainer = document.getElementById('theme-options');
+
+            // Install prompt elements
+            const installPrompt = document.getElementById('install-prompt');
+            const installAppBtn = document.getElementById('install-app-btn');
+            const closeInstallPrompt = document.getElementById('close-install-prompt');
+
+            // Loading screen
+            const loadingScreen = document.getElementById('loading-screen');
+
+            let timetableData = [];
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            let currentDayIndex = 0;
+            let deferredPrompt;
+            let highlightInterval;
+
+            // Course details from the PDF
+            const courseDetails = {
+                '1001': {
+                    code: '1001',
+                    name: 'COMMUNICATION SKILLS IN ENGLISH',
+                    faculty: 'SURYA S',
+                    type: 'Lecture',
+                    credits: '4',
+                    hours: '4',
+                    dept: 'AS',
+                    facultyCode: 'SS'
+                },
+                '1002': {
+                    code: '1002',
+                    name: 'MATHEMATICS I',
+                    faculty: 'RESMI R NAIR',
+                    type: 'Lecture',
+                    credits: '5',
+                    hours: '5',
+                    dept: 'AS',
+                    facultyCode: 'RRN'
+                },
+                '1003': {
+                    code: '1003',
+                    name: 'APPLIED PHYSICS I',
+                    faculty: 'BINCY ANNIE PHILIP',
+                    type: 'Lecture',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'AS',
+                    facultyCode: 'BAP'
+                },
+                '1004': {
+                    code: '1004',
+                    name: 'APPLIED CHEMISTRY',
+                    faculty: 'SREEUSHA N',
+                    type: 'Lecture',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'AS',
+                    facultyCode: 'SN'
+                },
+                '1005': {
+                    code: '1005',
+                    name: 'ENGINEERING GRAPHICS',
+                    faculty: 'SAMSON PETER',
+                    type: 'Practical',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'AS',
+                    facultyCode: 'SP'
+                },
+                '2006': {
+                    code: '2006',
+                    name: 'APPLIED PHYSICS LAB',
+                    faculty: 'BINCY ANNIE PHILIP',
+                    type: 'Lab',
+                    credits: '2',
+                    hours: '2',
+                    dept: 'AS',
+                    facultyCode: 'BAP'
+                },
+                '1007': {
+                    code: '1007',
+                    name: 'APPLIED CHEMISTRY LAB',
+                    faculty: 'SREEUSHA N',
+                    type: 'Lab',
+                    credits: '2',
+                    hours: '2',
+                    dept: 'AS',
+                    facultyCode: 'SN'
+                },
+                '1008': {
+                    code: '1008',
+                    name: 'INTRODUCTION TO IT SYSTEM LAB',
+                    faculty: 'SHERIN ANNIE THOMAS / DEEPIKA S NAIR',
+                    type: 'Lab/Lecture',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'CSE',
+                    facultyCode: 'SAT/DSN'
+                },
+                '2009': {
+                    code: '2009',
+                    name: 'ENGINEERING WORKSHOP PRACTICE',
+                    faculty: 'BINJU K BABU',
+                    type: 'Workshop',
+                    credits: '3',
+                    hours: '3',
+                    dept: 'CE,AS',
+                    facultyCode: 'BKB'
+                },
+                '1009': {
+                    code: '1009',
+                    name: 'SPORTS AND YOGA',
+                    faculty: 'RAHUL U',
+                    type: 'Practical',
+                    credits: '2',
+                    hours: '3',
+                    dept: 'AS',
+                    facultyCode: 'RU'
+                }
+            };
+
+            // Updated timetable structure with the requested changes
+            const timetableStructure = [
+                {
+                    time: "9:00–10:00",
+                    monday: "1001 (SS)",
+                    tuesday: "1008 (SAT)",
+                    wednesday: "2009 (BKB)",
+                    thursday: "1004 (SN)",
+                    friday: "1005 (SP)"
+                },
+                {
+                    time: "10:00–10:10",
+                    monday: "**Break**",
+                    tuesday: "**Break**",
+                    wednesday: "**Break**",
+                    thursday: "**Break**",
+                    friday: "**Break**"
+                },
+                {
+                    time: "10:10–11:10",
+                    monday: "1002 (RRN)",
+                    tuesday: "1008/2006 (SAT,DSN/BAP)",
+                    wednesday: "2009 (BKB)",
+                    thursday: "1008/2006 (SAT,DSN/BAP)",
+                    friday: "1005/2006 (SP)"
+                },
+                {
+                    time: "11:10–12:10",
+                    monday: "1003 (BAP)",
+                    tuesday: "1001 (SS)",
+                    wednesday: "2009 (BKB)",
+                    thursday: "",
+                    friday: ""
+                },
+                {
+                    time: "12:10–12:50",
+                    monday: "**Lunch Break**",
+                    tuesday: "**Lunch Break**",
+                    wednesday: "**Lunch Break**",
+                    thursday: "**Lunch Break**",
+                    friday: "**Lunch Break**"
+                },
+                {
+                    time: "12:50–1:50",
+                    monday: "1002 (RRN)",
+                    tuesday: "1004 (SN)",
+                    wednesday: "1002 (RRN)",
+                    thursday: "1003 (BAP)",
+                    friday: "1001 (SS)"
+                },
+                {
+                    time: "1:50–2:50",
+                    monday: "1001 (SS)",
+                    tuesday: "1001 (SS)",
+                    wednesday: "1003 (BAP)",
+                    thursday: "",
+                    friday: "1002 (RRN)"
+                },
+                {
+                    time: "2:50–3:00",
+                    monday: "**Break**",
+                    tuesday: "**Break**",
+                    wednesday: "**Break**",
+                    thursday: "1007 (SN)",
+                    friday: ""
+                },
+                {
+                    time: "3:00–4:00",
+                    monday: "1003 (BAP)",
+                    tuesday: "1002 (RRN)",
+                    wednesday: "1009 (RU)",
+                    thursday: "",
+                    friday: "1004 (SN)"
+                }
+            ];
+
+            // --- Feature: Web Share API ---
+            shareBtn.addEventListener('click', async () => {
+                const shareData = {
+                    title: 'College Timetable',
+                    text: 'Check out my college timetable!',
+                    url: window.location.href
+                };
+                if (navigator.share) {
+                    try {
+                        await navigator.share(shareData);
+                        console.log('Timetable shared successfully!');
+                    } catch (err) {
+                        console.error('Error sharing:', err);
+                    }
+                } else {
+                    alert('Web Share API not supported. Link: ' + window.location.href);
+                    try {
+                        await navigator.clipboard.writeText(window.location.href);
+                        alert('Link copied to clipboard!');
+                    } catch (err) {
+                        console.error('Could not copy text: ', err);
+                    }
+                }
+                 // Close sidebar after action
+                sidebar.classList.remove('expanded');
+            });
+
+            // --- Feature: Notifications ---
+            notifyBtn.addEventListener('click', requestNotificationPermission);
+            function requestNotificationPermission() {
+                if (!("Notification" in window)) {
+                    alert("This browser does not support notifications");
+                    notifyBtn.disabled = true;
+                    return;
+                }
+                if (Notification.permission === "granted") {
+                    alert("Notifications already enabled!");
+                    notifyBtn.disabled = true;
+                    return;
+                }
+                if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === "granted") {
+                            alert("Notifications enabled!");
+                            notifyBtn.disabled = true;
+                        } else {
+                            alert("Notifications denied.");
+                        }
+                    });
+                } else {
+                    alert("Notifications denied. Please enable in browser settings.");
+                    notifyBtn.disabled = true;
+                }
+                 // Close sidebar after action
+                sidebar.classList.remove('expanded');
+            }
+
+            // --- Persistent Install Prompt ---
+            function showInstallPrompt() {
+                 // Check if already dismissed or installed
+                 const dismissed = localStorage.getItem('installPromptDismissed');
+                 const installed = localStorage.getItem('appInstalled');
+                 if (dismissed || installed) return;
+
+                 // Check if install prompt was ever triggered (deferredPrompt exists)
+                 // or if the app is already installable (standalone display mode)
+                 if (deferredPrompt || window.matchMedia('(display-mode: standalone)').matches) {
+                     // Don't show if we have the prompt or are already standalone
+                     return;
+                 }
+
+                 // Show the persistent prompt
+                 installPrompt.style.display = 'flex';
+            }
+
+            installAppBtn.addEventListener('click', async () => {
+                 if (deferredPrompt) {
+                     deferredPrompt.prompt();
+                     const { outcome } = await deferredPrompt.userChoice;
+                     if (outcome === 'accepted') {
+                         console.log('User accepted the install prompt');
+                         localStorage.setItem('appInstalled', 'true');
+                         installPrompt.style.display = 'none';
+                     } else {
+                         console.log('User dismissed the install prompt');
+                         localStorage.setItem('installPromptDismissed', 'true');
+                     }
+                     deferredPrompt = null;
+                 } else {
+                     // If no deferred prompt, guide user manually (less common now)
+                     alert("Please use your browser's menu to install the app (e.g., 'Add to Home Screen').");
+                     localStorage.setItem('installPromptDismissed', 'true'); // Assume dismissed if manual
+                     installPrompt.style.display = 'none';
+                 }
+            });
+
+            closeInstallPrompt.addEventListener('click', () => {
+                installPrompt.style.display = 'none';
+                localStorage.setItem('installPromptDismissed', 'true');
+            });
+
+
+            // --- Sidebar Toggle ---
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('expanded');
+            });
+
+            // --- Theme Toggle (Sidebar) ---
+            themeToggleBtn.addEventListener('click', () => {
+                themeOptionsContainer.style.display = themeOptionsContainer.style.display === 'flex' ? 'none' : 'flex';
+            });
+
+            themeOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const theme = option.getAttribute('data-theme');
+                    setTheme(theme);
+                    localStorage.setItem('theme', theme);
+                    themeOptionsContainer.style.display = 'none'; // Close after selection
+                });
+            });
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                // Update sidebar icon
+                if (theme === 'light') {
+                    themeIconSidebar.className = 'fas fa-moon'; // Moon for light mode toggle
+                } else if (theme === 'dark') {
+                    themeIconSidebar.className = 'fas fa-sun'; // Sun for dark mode toggle
+                } else { // ocean
+                    themeIconSidebar.className = 'fas fa-tint'; // Tint for ocean mode toggle
+                }
+            }
+
+            // --- Initialize the timetable ---
+            function initializeTimetable() {
+                // --- Feature: Timetable Data Persistence ---
+                const storedTimetable = localStorage.getItem('timetableData');
+                if (storedTimetable) {
+                    try {
+                        timetableData = JSON.parse(storedTimetable);
+                        console.log("Timetable loaded from localStorage.");
+                    } catch (e) {
+                        console.error("Error parsing timetable from localStorage, using default.", e);
+                        timetableData = timetableStructure;
+                    }
+                } else {
+                    timetableData = timetableStructure;
+                    localStorage.setItem('timetableData', JSON.stringify(timetableData));
+                    console.log("Default timetable saved to localStorage.");
+                }
+
+                createDayTabs();
+                renderTimetableGrid();
+                renderMobileDayView(currentDayIndex);
+                highlightCurrentClass();
+                startHighlightInterval();
+
+                const savedDay = localStorage.getItem('lastViewedDay');
+                if (savedDay !== null) {
+                    const dayIndex = days.indexOf(savedDay);
+                    if (dayIndex !== -1) {
+                        currentDayIndex = dayIndex;
+                        updateActiveTab();
+                        renderMobileDayView(currentDayIndex);
+                    }
+                }
+
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                setTheme(savedTheme);
+
+                if (Notification.permission === "granted") {
+                    notifyBtn.disabled = true;
+                } else if (Notification.permission === "denied") {
+                     notifyBtn.disabled = true;
+                }
+
+                // --- Hide Loading Screen ---
+                setTimeout(() => {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                         loadingScreen.style.display = 'none';
+                         // Show install prompt after loading
+                         showInstallPrompt();
+                    }, 500);
+                }, 800);
+            }
+
+            function startHighlightInterval() {
+                if (highlightInterval) clearInterval(highlightInterval);
+                highlightInterval = setInterval(highlightCurrentClass, 60000);
+            }
+
+            function createDayTabs() {
+                dayTabs.innerHTML = '';
+                days.forEach((day, index) => {
+                    const tab = document.createElement('div');
+                    tab.className = 'day-tab';
+                    if (index === currentDayIndex) tab.classList.add('active');
+                    tab.textContent = day;
+                    tab.dataset.dayIndex = index;
+                    tab.addEventListener('click', () => {
+                        currentDayIndex = index;
+                        updateActiveTab();
+                        renderMobileDayView(currentDayIndex);
+                        localStorage.setItem('lastViewedDay', day);
+                    });
+                    dayTabs.appendChild(tab);
+                });
+            }
+
+            function updateActiveTab() {
+                const tabs = document.querySelectorAll('.day-tab');
+                tabs.forEach((tab, index) => {
+                    if (index === currentDayIndex) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+            }
+
+            function renderTimetableGrid(filter = '') {
+                while (timetableGrid.children.length > 6) {
+                    timetableGrid.removeChild(timetableGrid.lastChild);
+                }
+                timetableData.forEach(slot => {
+                    const timeCell = document.createElement('div');
+                    timeCell.className = 'time-label';
+                    timeCell.textContent = slot.time;
+                    timetableGrid.appendChild(timeCell);
+                    days.forEach(day => {
+                        const dayLower = day.toLowerCase();
+                        const content = slot[dayLower] || '';
+                        const cell = document.createElement('div');
+                        if (content === '') {
+                            cell.className = 'time-slot empty';
+                            cell.innerHTML = '&nbsp;';
+                        } else {
+                            const isBreak = content.includes('**Break**');
+                            const isLunch = content.includes('**Lunch Break**');
+                            const isClass = !isBreak && !isLunch && content.trim() !== '';
+                            cell.className = 'time-slot';
+                            if (isBreak) {
+                                cell.classList.add('break');
+                                cell.textContent = content.replace(/\*\*/g, '');
+                            } else if (isLunch) {
+                                cell.classList.add('lunch');
+                                cell.textContent = content.replace(/\*\*/g, '');
+                            } else if (isClass) {
+                                const courseMatch = content.match(/(\d+)\s*\(([^)]+)\)/);
+                                if (courseMatch) {
+                                    const courseCode = courseMatch[1];
+                                    const facultyCode = courseMatch[2];
+                                    const course = courseDetails[courseCode] || {};
+                                    if (course.type === 'Lab') {
+                                        cell.classList.add('lab');
+                                    } else if (course.type === 'Workshop') {
+                                        cell.classList.add('workshop');
+                                    } else if (courseCode === '1009') {
+                                        cell.classList.add('sports');
+                                    } else {
+                                        cell.classList.add('lecture');
+                                    }
+                                    cell.innerHTML = `
+                                        <div class="time-label">${slot.time}</div>
+                                        <div class="course-code">${courseCode} (${facultyCode})</div>
+                                        <div class="course-name">${course.name || 'N/A'}</div>
+                                        <div class="faculty-info">${course.faculty || 'N/A'}</div>
+                                        <div class="credit-hours">${course.credits || 'N/A'} credits • ${course.hours || 'N/A'} hrs/week</div>
+                                    `;
+                                    cell.addEventListener('click', () => {
+                                        showModal(
+                                            courseCode,
+                                            course.name || 'N/A',
+                                            course.faculty || 'N/A',
+                                            day,
+                                            slot.time,
+                                            course.type || 'N/A',
+                                            course.credits || 'N/A',
+                                            course.hours || 'N/A',
+                                            course.dept || 'N/A',
+                                            facultyCode
+                                        );
+                                    });
+                                } else {
+                                    cell.textContent = content;
+                                }
+                            }
+                        }
+                        if (filter) {
+                            const searchText = cell.textContent.toLowerCase();
+                            if (!searchText.includes(filter.toLowerCase())) {
+                                cell.style.display = 'none';
+                            } else {
+                                cell.style.display = 'flex';
+                            }
+                        } else {
+                            cell.style.display = 'flex';
+                        }
+                        timetableGrid.appendChild(cell);
+                    });
+                });
+            }
+
+            function renderMobileDayView(dayIndex, filter = '') {
+                const day = days[dayIndex].toLowerCase();
+                mobileDayView.innerHTML = '';
+                const dayTitle = document.createElement('h2');
+                dayTitle.textContent = days[dayIndex];
+                dayTitle.style.textAlign = 'center';
+                dayTitle.style.marginBottom = '20px';
+                dayTitle.style.color = 'var(--primary-color)';
+                mobileDayView.appendChild(dayTitle);
+                const dayContent = document.createElement('div');
+                dayContent.className = 'day-content';
+                mobileDayView.appendChild(dayContent);
+                let hasResults = false;
+                timetableData.forEach(slot => {
+                    const content = slot[day] || '';
+                    if (content.trim() === '') return;
+                    const card = document.createElement('div');
+                    const isBreak = content.includes('**Break**');
+                    const isLunch = content.includes('**Lunch Break**');
+                    const isClass = !isBreak && !isLunch;
+                    card.className = 'time-slot';
+                    if (isBreak) {
+                        card.classList.add('break');
+                        card.textContent = `${slot.time}: ${content.replace(/\*\*/g, '')}`;
+                    } else if (isLunch) {
+                        card.classList.add('lunch');
+                        card.textContent = `${slot.time}: ${content.replace(/\*\*/g, '')}`;
+                    } else if (isClass) {
+                        const courseMatch = content.match(/(\d+)\s*\(([^)]+)\)/);
+                        if (courseMatch) {
+                            const courseCode = courseMatch[1];
+                            const facultyCode = courseMatch[2];
+                            const course = courseDetails[courseCode] || {};
+                            if (course.type === 'Lab') {
+                                card.classList.add('lab');
+                            } else if (course.type === 'Workshop') {
+                                card.classList.add('workshop');
+                            } else if (courseCode === '1009') {
+                                card.classList.add('sports');
+                            } else {
+                                card.classList.add('lecture');
+                            }
+                            card.innerHTML = `
+                                <div class="time-label">${slot.time}</div>
+                                <div class="course-code">${courseCode} (${facultyCode})</div>
+                                <div class="course-name">${course.name || 'N/A'}</div>
+                                <div class="faculty-info">${course.faculty || 'N/A'}</div>
+                                <div class="credit-hours">${course.credits || 'N/A'} credits • ${course.hours || 'N/A'} hrs/week</div>
+                            `;
+                            card.addEventListener('click', () => {
+                                showModal(
+                                    courseCode,
+                                    course.name || 'N/A',
+                                    course.faculty || 'N/A',
+                                    days[dayIndex],
+                                    slot.time,
+                                    course.type || 'N/A',
+                                    course.credits || 'N/A',
+                                    course.hours || 'N/A',
+                                    course.dept || 'N/A',
+                                    facultyCode
+                                );
+                            });
+                        } else {
+                            card.textContent = content;
+                        }
+                    }
+                    if (filter) {
+                        const searchText = card.textContent.toLowerCase();
+                        if (!searchText.includes(filter.toLowerCase())) {
+                            return;
+                        }
+                    }
+                    dayContent.appendChild(card);
+                    hasResults = true;
+                });
+                if (!hasResults) {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'no-results';
+                    noResults.textContent = 'No classes found for this day';
+                    dayContent.appendChild(noResults);
+                }
+            }
+
+            function highlightCurrentClass() {
+                document.querySelectorAll('.time-slot.current').forEach(el => el.classList.remove('current'));
+                const now = new Date();
+                const currentDay = now.getDay();
+                if (currentDay >= 1 && currentDay <= 5) {
+                    const dayIndex = currentDay - 1;
+                    const day = days[dayIndex].toLowerCase();
+                    timetableData.forEach(slot => {
+                        const timeMatch = slot.time.match(/(\d+):(\d+)–(\d+):(\d+)/);
+                        if (!timeMatch) return;
+                        const startHour = parseInt(timeMatch[1]);
+                        const startMinute = parseInt(timeMatch[2]);
+                        const endHour = parseInt(timeMatch[3]);
+                        const endMinute = parseInt(timeMatch[4]);
+                        const slotStart = new Date();
+                        slotStart.setHours(startHour, startMinute, 0, 0);
+                        const slotEnd = new Date();
+                        slotEnd.setHours(endHour, endMinute, 0, 0);
+                        if (now >= slotStart && now <= slotEnd) {
+                            const timeIndex = timetableData.indexOf(slot);
+                            if (timeIndex !== -1) {
+                                const cellIndex = 1 + dayIndex + (timeIndex * 6);
+                                const cell = timetableGrid.children[cellIndex];
+                                if (cell) {
+                                    cell.classList.add('current');
+                                }
+                            }
+                            if (currentDayIndex === dayIndex) {
+                                const mobileCards = document.querySelectorAll('.mobile-day-view .time-slot');
+                                mobileCards.forEach(card => {
+                                    if (card.textContent.includes(slot.time)) {
+                                        card.classList.add('current');
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+
+            function showModal(code, subject, teacher, day, time, type, credits, hours, dept, facultyCode) {
+                document.getElementById('modal-title').textContent = subject;
+                document.getElementById('modal-time').textContent = time;
+                document.getElementById('modal-day').textContent = day;
+                document.getElementById('modal-code').textContent = code;
+                document.getElementById('modal-subject').textContent = subject;
+                document.getElementById('modal-teacher').textContent = teacher + (facultyCode ? ` (${facultyCode})` : '');
+                document.getElementById('modal-type').textContent = type;
+                document.getElementById('modal-credits').textContent = credits;
+                document.getElementById('modal-hours').textContent = hours;
+                document.getElementById('modal-dept').textContent = dept;
+                modal.style.display = 'flex';
+            }
+
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const filter = e.target.value.trim();
+                renderTimetableGrid(filter);
+                renderMobileDayView(currentDayIndex, filter);
+            });
+
+            todayBtn.addEventListener('click', () => {
+                const today = new Date().getDay() - 1;
+                if (today >= 0 && today <= 4) {
+                    currentDayIndex = today;
+                    updateActiveTab();
+                    renderMobileDayView(currentDayIndex);
+                    localStorage.setItem('lastViewedDay', days[currentDayIndex]);
+                }
+            });
+
+            prevDayBtn.addEventListener('click', () => {
+                currentDayIndex = (currentDayIndex - 1 + days.length) % days.length;
+                updateActiveTab();
+                renderMobileDayView(currentDayIndex);
+                localStorage.setItem('lastViewedDay', days[currentDayIndex]);
+            });
+
+            nextDayBtn.addEventListener('click', () => {
+                currentDayIndex = (currentDayIndex + 1) % days.length;
+                updateActiveTab();
+                renderMobileDayView(currentDayIndex);
+                localStorage.setItem('lastViewedDay', days[currentDayIndex]);
+            });
+
+            // PWA Installation Events
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('beforeinstallprompt event fired');
+                e.preventDefault();
+                deferredPrompt = e;
+                // Hide the persistent prompt if the browser one is available
+                installPrompt.style.display = 'none';
+            });
+
+            window.addEventListener('appinstalled', () => {
+                 console.log('PWA was installed');
+                 localStorage.setItem('appInstalled', 'true');
+                 installPrompt.style.display = 'none'; // Ensure it's hidden
+            });
+
+
+            initializeTimetable();
+        });
+    </script>
+</body>
+</html>
