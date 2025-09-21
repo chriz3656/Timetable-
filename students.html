@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4a6fa5">
+    <title>Student List - College Timetable</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-512x512.png">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cae;
+            --text-color: #333;
+            --light-text: #f5f5f5;
+            --bg-color: #f9f9f9;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+        [data-theme="dark"] {
+            --primary-color: #5e81ac;
+            --secondary-color: #81a1c1;
+            --text-color: #eceff4;
+            --light-text: #e5e9f0;
+            --bg-color: #2e3440;
+            --card-bg: #3b4252;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        [data-theme="ocean"] {
+            --primary-color: #0077be;
+            --secondary-color: #00a8cc;
+            --text-color: #2d3436;
+            --light-text: #ffffff;
+            --bg-color: #e0f7fa;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 15px rgba(0, 119, 190, 0.2);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, var(--card-bg) 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        .back-link:hover {
+            text-decoration: underline;
+            color: var(--secondary-color);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        th, td {
+            padding: 15px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        th {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            font-weight: bold;
+        }
+        tbody tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border: 1px solid #ccc;
+                margin-bottom: 10px;
+                padding: 10px;
+                border-radius: var(--border-radius);
+                background-color: var(--card-bg);
+            }
+            td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+                text-align: right;
+            }
+            td::before {
+                content: attr(data-label) ": ";
+                position: absolute;
+                left: 6px;
+                width: 45%;
+                text-align: left;
+                font-weight: bold;
+                color: var(--primary-color);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>S1 CF Student Details</h1>
+        <a href="./index.html" class="back-link">← Back to Home</a>
+        <table id="student-table">
+            <thead>
+                <tr>
+                    <th>Roll No</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Admission No</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const students = [
+                {roll:1,name:"ABHINAV VISHNU V",gender:"Male",admission:"25/004/CF/AEC"},
+                {roll:2,name:"ADHYA M R",gender:"Female",admission:"25/103/CF/AEC"},
+                {roll:3,name:"ADIT KAMALASANAN",gender:"Male",admission:"25/068/CF/AEC"},
+                {roll:4,name:"ADITHYA JAYARAJ",gender:"Female",admission:"25/060/CF/AEC"},
+                {roll:5,name:"AKSHAYA KRISHNA R",gender:"Female",admission:"25/066/CF/AEC"},
+                {roll:6,name:"AMARNATH R. NAIR",gender:"Male",admission:"25/039/CF/AEC"},
+                {roll:7,name:"ANANDHALEKSHMI A",gender:"Female",admission:"25/012/CF/AEC"},
+                {roll:8,name:"ANANTHAKRISHNAN B",gender:"Male",admission:"25/110/CF/AEC"},
+                {roll:9,name:"ANCHANA VISWANADH",gender:"Female",admission:"25/104/CF/AEC"},
+                {roll:10,name:"ANUSREE ANIL",gender:"Female",admission:"25/015/CF/AEC"},
+                {roll:11,name:"ARJUN S T",gender:"Male",admission:"25/149/CF/AEC"},
+                {roll:12,name:"ARJUN S",gender:"Male",admission:"25/090/CF/AEC"},
+                {roll:13,name:"ARPPITH MATHEW THOMAS",gender:"Male",admission:"25/148/CF/AEC"},
+                {roll:14,name:"ASHNA S JAYACHANDRAN",gender:"Female",admission:"25/113/CF/AEC"},
+                {roll:15,name:"ASWATHY B",gender:"Female",admission:"25/026/CF/AEC"},
+                {roll:16,name:"ASWIN P A",gender:"Male",admission:"25/118/CF/AEC"},
+                {roll:17,name:"AYUSH S",gender:"Male",admission:"25/006/CF/AEC"},
+                {roll:18,name:"CHRIS MON SAJI",gender:"Male",admission:"25/027/CF/AEC"},
+                {roll:19,name:"DEVANGANA R S",gender:"Female",admission:"25/042/CF/AEC"},
+                {roll:20,name:"DIVYA K",gender:"Female",admission:"25/035/CF/AEC"},
+                {roll:21,name:"FEBIN SAJI",gender:"Male",admission:"25/063/CF/AEC"},
+                {roll:22,name:"GANA GIRISH",gender:"Female",admission:"25/112/CF/AEC"},
+                {roll:23,name:"HAFEEZ MUHAMMED",gender:"Male",admission:"25/102/CF/AEC"},
+                {roll:24,name:"KARTHIK V R",gender:"Male",admission:"25/145/CF/AEC"},
+                {roll:25,name:"MANU CHACKO",gender:"Male",admission:"25/161/CF/AEC"},
+                {roll:26,name:"MEGHA S MADHU",gender:"Female",admission:"25/017/CF/AEC"},
+                {roll:27,name:"MIDHUN MANOJ",gender:"Male",admission:"25/092/CF/AEC"},
+                {roll:28,name:"MRINAL SHYJU",gender:"Male",admission:"25/010/CF/AEC"},
+                {roll:29,name:"N J SIDHARTH",gender:"Male",admission:"25/080/CF/AEC"},
+                {roll:30,name:"RIJIN C SHIJU",gender:"Male",admission:"25/001/CF/AEC"},
+                {roll:31,name:"RINSAMOL E J",gender:"Female",admission:"25/141/CF/AEC"},
+                {roll:32,name:"SACHU S",gender:"Male",admission:"25/126/CF/AEC"},
+                {roll:33,name:"SAURAV S",gender:"Male",admission:"25/109/CF/AEC"},
+                {roll:34,name:"SHIBIN SHAJI",gender:"Male",admission:"25/057/CF/AEC"},
+                {roll:35,name:"SHYAM ASHOK K A",gender:"Male",admission:"25/033/CF/AEC"},
+                {roll:36,name:"SIVA DILEEP",gender:"Male",admission:"25/048/CF/AEC"},
+                {roll:37,name:"SNEHA SAKETH",gender:"Female",admission:"25/111/CF/AEC"},
+                {roll:38,name:"SREE SUDHAN M S",gender:"Male",admission:"25/146/CF/AEC"},
+                {roll:39,name:"SREELAKSHMI SREEJITH",gender:"Female",admission:"25/165/CF/AEC"},
+                {roll:40,name:"SREELEKSHMI R",gender:"Female",admission:"25/014/CF/AEC"},
+                {roll:41,name:"SREELEKSHMI S",gender:"Female",admission:"25/047/CF/AEC"},
+                {roll:42,name:"SREENANDHA SURESH",gender:"Female",admission:"25/079/CF/AEC"},
+                {roll:43,name:"THUSHAL B T",gender:"Male",admission:"25/005/CF/AEC"}
+            ];
+
+            const tableBody = document.querySelector('#student-table tbody');
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                
+                const rollCell = document.createElement('td');
+                rollCell.textContent = student.roll;
+                rollCell.setAttribute('data-label', 'Roll No');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = student.name;
+                nameCell.setAttribute('data-label', 'Name');
+                
+                const genderCell = document.createElement('td');
+                genderCell.textContent = student.gender;
+                genderCell.setAttribute('data-label', 'Gender');
+                
+                const admissionCell = document.createElement('td');
+                admissionCell.textContent = student.admission;
+                admissionCell.setAttribute('data-label', 'Admission No');
+                
+                row.appendChild(rollCell);
+                row.appendChild(nameCell);
+                row.appendChild(genderCell);
+                row.appendChild(admissionCell);
+                
+                tableBody.appendChild(row);
+            });
+
+            // Apply theme from localStorage if available
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        });
+    </script>
+</body>
+</html>
