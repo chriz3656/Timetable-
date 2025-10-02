@@ -1,10 +1,10 @@
 // sw.js
-const VERSION = "v8"; // ⬅️ bump this number every time you update
+const VERSION = "v9"; // ⬅️ bump this number every time you update (was v8)
 const CACHE_NAME = `timetable-${VERSION}`;
 // Add the files you want cached
 const FILES_TO_CACHE = [
   "./",
-  "./index.html", // ⬅️ This now includes the new exam features
+  "./index.html", // ⬅️ This now includes the new sidebar features
   "./students.html", // ⬅️ Added new page
   "./offline.html", // ⬅️ Added offline page
   "./manifest.json",
