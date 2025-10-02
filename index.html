@@ -81,11 +81,7 @@
             min-height: 100vh;
             padding-bottom: 80px;
             overflow-x: hidden;
-            /* Ensure body content shifts when sidebar is open */
-            transition: padding-left 0.3s ease;
-        }
-        body.sidebar-open {
-            padding-left: var(--sidebar-width);
+            /* No padding-left adjustment needed anymore */
         }
         .container {
             max-width: 1400px;
@@ -399,25 +395,26 @@
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: var(--light-text);
         }
-        /* --- Sidebar Styles --- */
+        /* --- Sidebar Styles (Adapted from AI Companion) --- */
         .sidebar {
             position: fixed;
             top: 0;
-            left: -var(--sidebar-width);
+            left: 0;
             width: var(--sidebar-width);
             height: 100%;
             background: linear-gradient(135deg, var(--card-bg), var(--bg-color));
             box-shadow: var(--shadow);
             z-index: 1001;
-            transition: left 0.3s ease;
+            transform: translateX(-100%); /* Start hidden */
+            transition: transform 0.3s ease;
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
             overflow-y: auto;
         }
-        .sidebar.open {
-            left: 0;
+        .sidebar.active {
+            transform: translateX(0); /* Slide in */
         }
         .sidebar-header {
             padding-bottom: 15px;
@@ -492,7 +489,7 @@
             backdrop-filter: blur(5px);
         }
         .overlay.active {
-            display: block;
+            display: block; /* Show when active */
         }
         /* --- Menu Toggle Button --- */
         #menu-toggle-btn {
@@ -774,48 +771,6 @@
             /* Adjust body padding for open sidebar on mobile */
             body.sidebar-open {
                 padding-left: var(--sidebar-width);
-            }
-            /* Hide the menu toggle button on small screens, use hamburger icon */
-            #menu-toggle-btn {
-                display: none;
-            }
-            /* Show the hamburger icon for mobile */
-            .hamburger-menu {
-                display: inline-block;
-                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-                color: var(--light-text);
-                border: none;
-                border-radius: 50%;
-                cursor: pointer;
-                transition: var(--transition);
-                box-shadow: var(--shadow);
-                font-weight: 500;
-                position: relative;
-                overflow: hidden;
-                width: 45px;
-                height: 45px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
-            }
-            .hamburger-menu:hover {
-                transform: scale(1.05);
-                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-            }
-            .hamburger-menu::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-                transform: translateX(-100%);
-                transition: transform 0.5s;
-            }
-            .hamburger-menu:hover::after {
-                transform: translateX(100%);
             }
         }
         @media (max-width: 480px) {
@@ -1382,11 +1337,16 @@
                 }
             ];
 
-            // --- Feature: Sidebar Toggle ---
+            // --- Feature: Sidebar Toggle (Adapted from AI Companion mechanics) ---
             function toggleSidebar() {
-                sidebar.classList.toggle('open');
-                overlay.classList.toggle('active');
-                document.body.classList.toggle('sidebar-open');
+                const isOpen = sidebar.classList.contains('active');
+                if (isOpen) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                } else {
+                    sidebar.classList.add('active');
+                    overlay.classList.add('active');
+                }
             }
 
             menuToggleBtn.addEventListener('click', toggleSidebar);
@@ -1420,13 +1380,21 @@
                         console.error('Could not copy text: ', err);
                     }
                 }
-                toggleSidebar(); // Close sidebar after action
+                // Close sidebar after action
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
             });
 
             // --- Feature: Notifications ---
             notifyBtn.addEventListener('click', () => {
                 requestNotificationPermission();
-                toggleSidebar(); // Close sidebar after action
+                // Close sidebar after action
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
             });
             function requestNotificationPermission() {
                 if (!("Notification" in window)) {
@@ -1554,7 +1522,11 @@
                         updateActiveTab();
                         renderMobileDayView(currentDayIndex);
                         localStorage.setItem('lastViewedDay', day);
-                        toggleSidebar(); // Close sidebar if open after clicking a tab
+                        // Close sidebar if open after clicking a tab
+                        if (sidebar.classList.contains('active')) {
+                            sidebar.classList.remove('active');
+                            overlay.classList.remove('active');
+                        }
                     });
                     dayTabs.appendChild(tab);
                 });
@@ -1641,7 +1613,11 @@
                                             course.dept || 'N/A',
                                             facultyCode
                                         );
-                                        toggleSidebar(); // Close sidebar if open after clicking a slot
+                                        // Close sidebar if open after clicking a slot
+                                        if (sidebar.classList.contains('active')) {
+                                            sidebar.classList.remove('active');
+                                            overlay.classList.remove('active');
+                                        }
                                     });
                                 } else {
                                     cell.textContent = content;
@@ -1730,7 +1706,11 @@
                                     course.dept || 'N/A',
                                     facultyCode
                                 );
-                                toggleSidebar(); // Close sidebar if open after clicking a slot
+                                // Close sidebar if open after clicking a slot
+                                if (sidebar.classList.contains('active')) {
+                                    sidebar.classList.remove('active');
+                                    overlay.classList.remove('active');
+                                }
                             });
                         } else {
                             card.textContent = content;
@@ -1851,7 +1831,11 @@
                     renderMobileDayView(currentDayIndex);
                     localStorage.setItem('lastViewedDay', days[currentDayIndex]);
                 }
-                toggleSidebar(); // Close sidebar after action
+                // Close sidebar after action
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
             });
 
             // Previous day button
@@ -1860,7 +1844,11 @@
                 updateActiveTab();
                 renderMobileDayView(currentDayIndex);
                 localStorage.setItem('lastViewedDay', days[currentDayIndex]);
-                toggleSidebar(); // Close sidebar after action
+                // Close sidebar after action
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
             });
 
             // Next day button
@@ -1869,7 +1857,11 @@
                 updateActiveTab();
                 renderMobileDayView(currentDayIndex);
                 localStorage.setItem('lastViewedDay', days[currentDayIndex]);
-                toggleSidebar(); // Close sidebar after action
+                // Close sidebar after action
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
             });
 
             // Theme toggle
@@ -1879,7 +1871,11 @@
                                 currentTheme === 'dark' ? 'ocean' : 'light';
                 setTheme(newTheme);
                 localStorage.setItem('theme', newTheme);
-                toggleSidebar(); // Close sidebar after action
+                // Close sidebar after action
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
             });
 
             // Theme options
@@ -1888,7 +1884,11 @@
                     const theme = option.getAttribute('data-theme');
                     setTheme(theme);
                     localStorage.setItem('theme', theme);
-                    toggleSidebar(); // Close sidebar after action
+                    // Close sidebar after action
+                    if (sidebar.classList.contains('active')) {
+                        sidebar.classList.remove('active');
+                        overlay.classList.remove('active');
+                    }
                 });
             });
 
@@ -1919,14 +1919,22 @@
                     }
                     deferredPrompt = null;
                 }
-                toggleSidebar(); // Close sidebar after action
+                // Close sidebar after action
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
             });
             // Dismiss PWA prompt
             dismissInstallButton.addEventListener('click', () => {
                  installContainer.classList.add('hidden'); // Use classList.add
                  // Optionally, store dismissal in localStorage to not show again for a while
                  localStorage.setItem('pwaPromptDismissed', Date.now().toString());
-                 toggleSidebar(); // Close sidebar after action
+                 // Close sidebar after action
+                 if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                 }
             });
             window.addEventListener('appinstalled', () => {
                 installContainer.classList.add('hidden'); // Use classList.add
