@@ -1014,6 +1014,14 @@
                 <div class="theme-option" data-theme="ocean">Ocean</div>
             </div>
         </div>
+        <!-- New Install Button in Sidebar -->
+        <div class="sidebar-item">
+            <i class="fas fa-download"></i>
+            <button id="sidebar-install-btn" title="Install App">
+                Install App
+            </button>
+        </div>
+        <!-- End Install Button in Sidebar -->
     </div>
     <div class="overlay" id="overlay"></div>
 
@@ -1100,11 +1108,13 @@
             </div>
         </div>
     </div>
+    <!-- Existing Install Prompt Container (for initial popup) -->
     <div id="installContainer" class="hidden">
         <p>Install this app for better experience</p>
         <button id="installButton">Install</button>
         <button id="dismissInstallButton">Dismiss</button>
     </div>
+    <!-- End Existing Install Prompt Container -->
     <div class="footer">
         <div class="credit">
             <span>Created by</span>
@@ -1147,6 +1157,8 @@
             const sidebar = document.getElementById('sidebar');
             const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
             const overlay = document.getElementById('overlay');
+            // --- New: Sidebar Install Button ---
+            const sidebarInstallBtn = document.getElementById('sidebar-install-btn');
 
             // Timetable data
             let timetableData = [];
@@ -1430,6 +1442,68 @@
                     new Notification(title, { body: body, icon: '/icons/icon-192x192.png' });
                 }
             }
+
+            // --- Feature: PWA Installation (Integrated) ---
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                // Check if the user has already dismissed the prompt before
+                const hasDismissed = localStorage.getItem('pwaPromptDismissed');
+                if (!hasDismissed) {
+                    installContainer.classList.remove('hidden'); // Show initial popup
+                }
+            });
+
+            installButton.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installContainer.classList.add('hidden'); // Hide popup
+                    }
+                    deferredPrompt = null;
+                }
+            });
+
+            // Dismiss PWA prompt (initial popup)
+            dismissInstallButton.addEventListener('click', () => {
+                 installContainer.classList.add('hidden'); // Hide popup
+                 // Store dismissal in localStorage to not show again for the initial popup
+                 localStorage.setItem('pwaPromptDismissed', Date.now().toString());
+            });
+
+            // Sidebar Install Button Event Listener
+            sidebarInstallBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        console.log('PWA installation accepted from sidebar.');
+                        // Optionally, hide the sidebar after successful install
+                        // sidebar.classList.remove('active');
+                        // overlay.classList.remove('active');
+                    } else {
+                        console.log('PWA installation dismissed from sidebar.');
+                    }
+                    // Always clear the deferredPrompt after using it
+                    deferredPrompt = null;
+                } else {
+                    // If deferredPrompt is not available, it means the install UI might not be available
+                    // or the criteria for showing it haven't been met again.
+                    // You might want to show an alert or guide the user.
+                    alert('Install option is not currently available. Please use the browser menu to install the app if possible.');
+                }
+                // Close sidebar after attempting install
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            });
+
+            window.addEventListener('appinstalled', () => {
+                installContainer.classList.add('hidden'); // Hide popup if installed
+                console.log('PWA installed');
+            });
 
             // --- Initialize the timetable ---
             function initializeTimetable() {
@@ -1904,41 +1978,6 @@
                 }
             }
 
-            // PWA Installation
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                installContainer.classList.remove('hidden'); // Use classList.remove instead of style.display
-            });
-            installButton.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        installContainer.classList.add('hidden'); // Use classList.add
-                    }
-                    deferredPrompt = null;
-                }
-                // Close sidebar after action
-                if (sidebar.classList.contains('active')) {
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('active');
-                }
-            });
-            // Dismiss PWA prompt
-            dismissInstallButton.addEventListener('click', () => {
-                 installContainer.classList.add('hidden'); // Use classList.add
-                 // Optionally, store dismissal in localStorage to not show again for a while
-                 localStorage.setItem('pwaPromptDismissed', Date.now().toString());
-                 // Close sidebar after action
-                 if (sidebar.classList.contains('active')) {
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('active');
-                 }
-            });
-            window.addEventListener('appinstalled', () => {
-                installContainer.classList.add('hidden'); // Use classList.add
-            });
 
             // Initialize the timetable
             initializeTimetable();
