@@ -29,6 +29,7 @@
             --border-radius: 8px;
             --transition: all 0.3s ease;
             --neon-glow: 0 0 10px rgba(74, 111, 165, 0.5);
+            --sidebar-width: 250px;
         }
         [data-theme="dark"] {
             --primary-color: #5e81ac;
@@ -79,7 +80,13 @@
             position: relative;
             min-height: 100vh;
             padding-bottom: 80px;
+            padding-left: 0; /* Adjusted for sidebar */
             overflow-x: hidden;
+            /* Ensure body content shifts when sidebar is open */
+            transition: padding-left 0.3s ease;
+        }
+        body.sidebar-open {
+            padding-left: var(--sidebar-width);
         }
         .container {
             max-width: 1400px;
@@ -393,6 +400,140 @@
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: var(--light-text);
         }
+        /* --- Sidebar Styles --- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -var(--sidebar-width);
+            width: var(--sidebar-width);
+            height: 100%;
+            background: linear-gradient(135deg, var(--card-bg), var(--bg-color));
+            box-shadow: var(--shadow);
+            z-index: 1001;
+            transition: left 0.3s ease;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        .sidebar.open {
+            left: 0;
+        }
+        .sidebar-header {
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--primary-color);
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-color);
+            box-shadow: var(--shadow);
+        }
+        .sidebar-item:hover {
+            background: var(--primary-color);
+            color: var(--light-text);
+        }
+        .sidebar-item i {
+            width: 24px;
+            text-align: center;
+        }
+        .sidebar-item button {
+            background: none;
+            border: none;
+            color: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            padding: 0;
+            box-shadow: none;
+        }
+        .sidebar-item button:hover {
+            background: none; /* Override default button hover */
+            box-shadow: none;
+        }
+        .sidebar-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .sidebar-close:hover {
+            opacity: 0.8;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .overlay.active {
+            display: block;
+        }
+        /* --- Menu Toggle Button --- */
+        #menu-toggle-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--light-text);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        #menu-toggle-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        #menu-toggle-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+        #menu-toggle-btn:hover::after {
+            transform: translateX(100%);
+        }
+        /* --- End Sidebar Styles --- */
+
         /* --- New Student Button Styles --- */
         #students-btn {
             text-decoration: none;
@@ -631,11 +772,20 @@
                 position: relative;
                 margin-top: 30px;
             }
+            /* Adjust body padding for open sidebar on mobile */
+            body.sidebar-open {
+                padding-left: var(--sidebar-width);
+            }
         }
         @media (max-width: 480px) {
             .controls {
-                flex-direction: column;
-                align-items: stretch;
+                flex-direction: row; /* Keep menu and today btn on same line */
+                justify-content: space-between;
+                align-items: center;
+            }
+            .search-container {
+                flex-grow: 1;
+                margin-right: 10px; /* Add space between search and today btn */
             }
             .day-tabs {
                 flex-wrap: wrap;
@@ -832,6 +982,45 @@
         <div class="loader"></div>
         <div id="loading-text">Loading Timetable...</div>
     </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">Menu</div>
+        <button class="sidebar-close" id="sidebar-close-btn">&times;</button>
+        <div class="sidebar-item">
+            <i class="fas fa-user-shield"></i>
+            <a href="./adminpage/admin_login.html" id="admin-login-btn-sidebar" title="Admin Login">
+                <button>Admin Login</button>
+            </a>
+        </div>
+        <div class="sidebar-item">
+            <i class="fas fa-users"></i>
+            <a href="./students.html" id="students-btn-sidebar" title="View Student List">
+                <button>View All Students</button>
+            </a>
+        </div>
+        <div class="sidebar-item">
+            <i class="fas fa-share-alt"></i>
+            <button id="share-btn-sidebar" title="Share Timetable">Share</button>
+        </div>
+        <div class="sidebar-item">
+            <i class="fas fa-bell"></i>
+            <button id="notify-btn-sidebar" title="Enable Notifications">Notify</button>
+        </div>
+        <div class="sidebar-item">
+            <i class="fas fa-palette"></i>
+            <button class="theme-toggle" id="theme-toggle-sidebar">
+                <span id="theme-icon-sidebar">🌙</span> Theme
+            </button>
+            <div class="theme-options">
+                <div class="theme-option" data-theme="light">Light</div>
+                <div class="theme-option" data-theme="dark">Dark</div>
+                <div class="theme-option" data-theme="ocean">Ocean</div>
+            </div>
+        </div>
+    </div>
+    <div class="overlay" id="overlay"></div>
+
     <div class="container">
         <header>
             <div class="college-info">
@@ -840,37 +1029,15 @@
                 <div class="batch-info">Batch: 2025-2026 (Diploma - CFIS) | Semester: S1 | Tutor: Sherin Annie Thomas</div>
             </div>
             <div class="controls">
-                <!-- Admin Login Button Added Here -->
-                <a href="./adminpage/admin_login.html" id="admin-login-btn" title="Admin Login(Beta)">
-                    <button>
-                        <i class="fas fa-user-shield"></i> Admin Login (Beta)
-                    </button>
-                </a>
-                <!-- End Admin Login Button -->
+                <!-- Menu Toggle Button -->
+                <button id="menu-toggle-btn" title="Open Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <!-- Today Button -->
+                <button id="today-btn">Today</button>
+                <!-- Search Bar -->
                 <div class="search-container">
                     <input type="text" id="search" placeholder="Search courses, faculty...">
-                </div>
-                <button id="today-btn">Today</button>
-                <a href="./students.html" id="students-btn" title="View Student List">
-                    <button>
-                        <i class="fas fa-users"></i> View All Students
-                    </button>
-                </a>
-                <button id="share-btn" title="Share Timetable">
-                    <i class="fas fa-share-alt"></i> Share
-                </button>
-                <button id="notify-btn" title="Enable Notifications">
-                    <i class="fas fa-bell"></i> Notify
-                </button>
-                <div class="theme-selector">
-                    <button class="theme-toggle" id="theme-toggle">
-                        <span id="theme-icon">🌙</span> Theme
-                    </button>
-                    <div class="theme-options">
-                        <div class="theme-option" data-theme="light">Light</div>
-                        <div class="theme-option" data-theme="dark">Dark</div>
-                        <div class="theme-option" data-theme="ocean">Ocean</div>
-                    </div>
                 </div>
             </div>
         </header>
@@ -969,17 +1136,21 @@
             const todayBtn = document.getElementById('today-btn');
             const prevDayBtn = document.getElementById('prev-day');
             const nextDayBtn = document.getElementById('next-day');
-            const themeToggle = document.getElementById('theme-toggle');
-            const themeIcon = document.getElementById('theme-icon');
+            const themeToggle = document.getElementById('theme-toggle-sidebar'); // Updated ID
+            const themeIcon = document.getElementById('theme-icon-sidebar'); // Updated ID
             const modal = document.getElementById('modal');
             const closeModal = document.querySelector('.close-modal');
             const installContainer = document.getElementById('installContainer');
             const installButton = document.getElementById('installButton');
             const dismissInstallButton = document.getElementById('dismissInstallButton');
             const themeOptions = document.querySelectorAll('.theme-option');
-            const shareBtn = document.getElementById('share-btn');
-            const notifyBtn = document.getElementById('notify-btn');
+            const shareBtn = document.getElementById('share-btn-sidebar'); // Updated ID
+            const notifyBtn = document.getElementById('notify-btn-sidebar'); // Updated ID
             const loadingScreen = document.getElementById('loading-screen');
+            const menuToggleBtn = document.getElementById('menu-toggle-btn');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+            const overlay = document.getElementById('overlay');
 
             // Timetable data
             let timetableData = [];
@@ -1170,6 +1341,17 @@
                 }
             ];
 
+            // --- Feature: Sidebar Toggle ---
+            function toggleSidebar() {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            }
+
+            menuToggleBtn.addEventListener('click', toggleSidebar);
+            sidebarCloseBtn.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+
             // --- Feature: Web Share API ---
             shareBtn.addEventListener('click', async () => {
                 const shareData = {
@@ -1197,10 +1379,14 @@
                         console.error('Could not copy text: ', err);
                     }
                 }
+                toggleSidebar(); // Close sidebar after action
             });
 
             // --- Feature: Notifications ---
-            notifyBtn.addEventListener('click', requestNotificationPermission);
+            notifyBtn.addEventListener('click', () => {
+                requestNotificationPermission();
+                toggleSidebar(); // Close sidebar after action
+            });
             function requestNotificationPermission() {
                 if (!("Notification" in window)) {
                     alert("This browser does not support desktop notification");
@@ -1327,6 +1513,7 @@
                         updateActiveTab();
                         renderMobileDayView(currentDayIndex);
                         localStorage.setItem('lastViewedDay', day);
+                        toggleSidebar(); // Close sidebar if open after clicking a tab
                     });
                     dayTabs.appendChild(tab);
                 });
@@ -1413,6 +1600,7 @@
                                             course.dept || 'N/A',
                                             facultyCode
                                         );
+                                        toggleSidebar(); // Close sidebar if open after clicking a slot
                                     });
                                 } else {
                                     cell.textContent = content;
@@ -1501,6 +1689,7 @@
                                     course.dept || 'N/A',
                                     facultyCode
                                 );
+                                toggleSidebar(); // Close sidebar if open after clicking a slot
                             });
                         } else {
                             card.textContent = content;
@@ -1621,6 +1810,7 @@
                     renderMobileDayView(currentDayIndex);
                     localStorage.setItem('lastViewedDay', days[currentDayIndex]);
                 }
+                toggleSidebar(); // Close sidebar after action
             });
 
             // Previous day button
@@ -1629,6 +1819,7 @@
                 updateActiveTab();
                 renderMobileDayView(currentDayIndex);
                 localStorage.setItem('lastViewedDay', days[currentDayIndex]);
+                toggleSidebar(); // Close sidebar after action
             });
 
             // Next day button
@@ -1637,6 +1828,7 @@
                 updateActiveTab();
                 renderMobileDayView(currentDayIndex);
                 localStorage.setItem('lastViewedDay', days[currentDayIndex]);
+                toggleSidebar(); // Close sidebar after action
             });
 
             // Theme toggle
@@ -1646,6 +1838,7 @@
                                 currentTheme === 'dark' ? 'ocean' : 'light';
                 setTheme(newTheme);
                 localStorage.setItem('theme', newTheme);
+                toggleSidebar(); // Close sidebar after action
             });
 
             // Theme options
@@ -1654,6 +1847,7 @@
                     const theme = option.getAttribute('data-theme');
                     setTheme(theme);
                     localStorage.setItem('theme', theme);
+                    toggleSidebar(); // Close sidebar after action
                 });
             });
 
@@ -1684,12 +1878,14 @@
                     }
                     deferredPrompt = null;
                 }
+                toggleSidebar(); // Close sidebar after action
             });
             // Dismiss PWA prompt
             dismissInstallButton.addEventListener('click', () => {
                  installContainer.classList.add('hidden'); // Use classList.add
                  // Optionally, store dismissal in localStorage to not show again for a while
                  localStorage.setItem('pwaPromptDismissed', Date.now().toString());
+                 toggleSidebar(); // Close sidebar after action
             });
             window.addEventListener('appinstalled', () => {
                 installContainer.classList.add('hidden'); // Use classList.add
